@@ -7,6 +7,8 @@ const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+const VANGO_KEY = process.env.VANGO_KEY;
+
 const openai = new OpenAIApi(configuration);
 
 const generateStorybookComponent = async (componentCode: string) => {
@@ -95,6 +97,12 @@ export default async function handler(
 ) {
   if (req.method === "POST") {
     const { componentCode } = req.body;
+    const { vangoKey } = req.headers;
+
+    if (vangoKey !== VANGO_KEY) {
+      res.status(401).json({ message: "Unauthorized." });
+      return;
+    }
 
     if (!componentCode) {
       res.status(400).json({ message: "Component code is required." });
