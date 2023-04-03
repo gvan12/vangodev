@@ -78,7 +78,7 @@ WithinTypography.args = {
   console.log("calling OPENAI...");
 
   const { data, status } = await openai.createChatCompletion({
-    model: "gpt-3.5-turbo",
+    model: "gpt-4",
     messages: conversation,
   });
 
