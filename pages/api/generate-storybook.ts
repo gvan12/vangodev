@@ -3,6 +3,16 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from "openai";
 
+function parseCodeBlock(input: string): string {
+  const codeBlockRegex = /```[\s\S]*?```/g;
+  const match = input.match(codeBlockRegex);
+  if (match) {
+    const codeBlock = match[0].replace(/```/g, "").trim();
+    return codeBlock;
+  }
+  return "";
+}
+
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -21,11 +31,6 @@ const generateStorybookComponent = async (componentCode: string) => {
       - First think step-by-step - describe your plan for what to build in pseudocode, written out in great detail.
       - Then output the code in a single code block.
       - Minimize any other prose.`,
-    },
-    {
-      role: "system",
-      content:
-        "Only respond with the Storybook component code as a string no matter what",
     },
     {
       role: "system",
@@ -88,18 +93,20 @@ WithinTypography.args = {
   //@ts-ignore
   const generatedStorybookCode = data.choices[0].message.content.trim();
 
-  return generatedStorybookCode;
-};
+  const storybookCode = parseCodeBlock(generatedStorybookCode);
 
+  return storybookCode;
+};
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
   if (req.method === "POST") {
     const { componentCode } = req.body;
-    const { vangoKey } = req.headers;
+    const { vangokey } = req.headers;
+    console.log("req.headers", req.headers);
 
-    if (vangoKey !== VANGO_KEY) {
+    if (vangokey !== VANGO_KEY) {
       res.status(401).json({ message: "Unauthorized." });
       return;
     }
@@ -113,7 +120,12 @@ export default async function handler(
       const storybookComponentCode = await generateStorybookComponent(
         componentCode as string
       );
-      res.status(200).json({ storybookCode: storybookComponentCode });
+      res.setHeader("Content-Type", "application/octet-stream");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=storybook-component.tsx`
+      );
+      res.status(200).send(storybookComponentCode);
     } catch (error) {
       console.log("error", error);
       res
