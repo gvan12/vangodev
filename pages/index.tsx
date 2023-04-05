@@ -47,7 +47,7 @@ export default function Home() {
       <main className={styles.main}>
         <div>
           <h1>Vango trash heap</h1>
-          <p>Welcome to the trash heap of Vango's projects.</p>
+          <p>{`Welcome to the trash heap of Vango's projects.`}</p>
         </div>
         <section>
           <h3>create storybook components</h3>
